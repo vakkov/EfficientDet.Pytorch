@@ -68,8 +68,10 @@ class FocalLoss(nn.Module):
             # pdb.set_trace()
 
             # compute the loss for classification
-            targets = torch.ones(classification.shape) * -1
-            targets = targets.cuda()
+
+            # targets = torch.ones(classification.shape) * -1
+            # targets = targets.cuda()
+            targets = torch.ones_like(classification) * -1
 
             targets[torch.lt(IoU_max, 0.4), :] = 0
 
@@ -83,7 +85,8 @@ class FocalLoss(nn.Module):
             targets[positive_indices,
                     assigned_annotations[positive_indices, 4].long()] = 1
 
-            alpha_factor = torch.ones(targets.shape).cuda() * alpha
+            #alpha_factor = torch.ones(targets.shape).cuda() * alpha
+            alpha_factor = torch.ones_like(targets) * alpha
 
             alpha_factor = torch.where(
                 torch.eq(targets, 1.), alpha_factor, 1. - alpha_factor)
@@ -97,8 +100,9 @@ class FocalLoss(nn.Module):
             # cls_loss = focal_weight * torch.pow(bce, gamma)
             cls_loss = focal_weight * bce
 
-            cls_loss = torch.where(
-                torch.ne(targets, -1.0), cls_loss, torch.zeros(cls_loss.shape).cuda())
+            # cls_loss = torch.where(
+            #     torch.ne(targets, -1.0), cls_loss, torch.zeros(cls_loss.shape).cuda())
+            cls_loss = torch.where(torch.ne(targets, -1.0), cls_loss, torch.zeros_like(cls_loss))
 
             classification_losses.append(
                 cls_loss.sum()/torch.clamp(num_positive_anchors.float(), min=1.0))
